@@ -1,5 +1,6 @@
 package game2048;
 
+import java.util.Arrays;
 import java.util.Formatter;
 
 
@@ -93,8 +94,14 @@ public class Model {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
-
-
+        int n = b.size();
+        for(int i=0;i<n;i++){
+            for(int j=0;j<n;j++){
+                if(b.tile(i,j)==null){
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -105,8 +112,17 @@ public class Model {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
-
-
+        int n = b.size();
+        for(int i=0;i<n;i++){
+            for(int j=0;j<n;j++){
+                if(b.tile(i,j)!=null){
+                    Tile temp = b.tile(i,j);
+                    if(temp.value()>=MAX_PIECE){
+                        return true;
+                    }
+                }
+            }
+        }
         return false;
     }
 
@@ -118,7 +134,29 @@ public class Model {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
-
+        int n = b.size();
+        //判断是否有空格
+        for(int i=0;i<n;i++){
+            for(int j=0;j<n;j++){
+                if(b.tile(i,j)==null)
+                    return true;
+            }
+        }
+        int[][] dirc = {{0,1},{0,-1},{1,0},{-1,0}};
+        for(int i=0;i<n;i++){
+            for(int j=0;j<n;j++){
+                for(int r=0;r<4;r++){
+                    int x = dirc[r][0] + i, y = dirc[r][1] + j;
+                    if(x>=0&&x<n&&y>=0&& y<n){
+                        Tile tile1 = b.tile(x,y);
+                        Tile tile2 = b.tile(i,j);
+                        if(tile1.value()==tile2.value()){
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
 
         return false;
     }
@@ -138,8 +176,44 @@ public class Model {
     public void tilt(Side side) {
         // TODO: Modify this.board (and if applicable, this.score) to account
         // for the tilt to the Side SIDE.
-
-
+        //从给定边的顶部开始判断
+        int n = board.size();
+        board.setViewingPerspective(side);
+        int[][] array = new int[n][n];
+        for(int i=0;i<n;i++){
+            Arrays.fill(array[i],0);
+        }
+        for(int col=0;col<n;col++){
+            for(int row=n-2;row>=0;row--){
+                Tile t = board.tile(col,row);
+                if(t!=null){
+                    int nextRow = row+1;
+                    while(nextRow<n-1 && board.tile(col,nextRow)==null){
+                        nextRow++;
+                    }
+                    if(nextRow==n-1 && board.tile(col,nextRow)==null){
+                        board.move(col,nextRow,t);
+                        continue;
+                    }
+                    if(board.tile(col,nextRow)!=null){
+                        if(board.tile(col,row).value()!=board.tile(col,nextRow).value()) {
+                            nextRow--;
+                            board.move(col,nextRow,t);
+                        }else if(array[col][nextRow]==0){
+                            board.move(col,nextRow,t);
+                            score+=board.tile(col,nextRow).value();
+                            array[col][nextRow]=1;
+                        }else{
+                            nextRow--;
+                            board.move(col,nextRow,t);
+                        }
+                    }else{
+                        board.move(col,nextRow,t);
+                    }
+                }
+            }
+        }
+        board.setViewingPerspective(Side.NORTH);
         checkGameOver();
     }
 
